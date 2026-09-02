@@ -1,0 +1,108 @@
+# ============================================================
+# Nikoji Technologies — Root .htaccess
+# Security headers, caching, compression, and access protection.
+# Written for Apache on cPanel shared hosting (mod_headers,
+# mod_deflate/mod_gzip, mod_expires — all standard on cPanel).
+# ============================================================
+
+# ---- Security headers ----
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set X-XSS-Protection "1; mode=block"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "geolocation=(), camera=(), microphone=()"
+  # Content-Security-Policy: allows Google Fonts (used site-wide) and the
+  # Google Maps embed on contact.php. Inline <style>/<script> blocks are
+  # used throughout the pages, so 'unsafe-inline' is required for style-src
+  # and script-src until those are moved to external files.
+  Header always set Content-Security-Policy "default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; frame-src https://www.google.com; frame-ancestors 'self'"
+</IfModule>
+
+# ---- Hide .php extension ----
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_FILENAME}\.php -f
+  RewriteRule ^(.*)$ $1.php [L]
+  
+  # Force HTTPS (safe to leave in even before SSL is issued — cPanel's
+  # AutoSSL/Let's Encrypt should be enabled first, see README.md)
+  RewriteCond %{HTTPS} off
+  RewriteCond %{HTTP:X-Forwarded-Proto} !https
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+
+# ---- Block direct access to sensitive file types anywhere in the site ----
+<FilesMatch "\.(env|json|csv|log|ini|sh|bak|sql|md)$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>
+
+# README.md is documentation, not a runtime dependency — the pattern above
+# blocks it site-wide. Uploaded PDFs/images live under assets/uploads/ and
+# are intentionally excluded from that block (see below).
+<FilesMatch "^(admin-config)\.php$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>
+
+# ---- Never execute scripts from the uploads folder, even if one slips through ----
+<IfModule mod_rewrite.c>
+  RewriteRule ^assets/uploads/.*\.(php|php\d|phtml|phar|pl|py|cgi|sh)$ - [F,L]
+</IfModule>
+<Directory "assets/uploads">
+  <IfModule mod_php7.c>
+    php_flag engine off
+  </IfModule>
+  <IfModule mod_php8.c>
+    php_flag engine off
+  </IfModule>
+</Directory>
+
+# ---- Compression ----
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/css text/xml
+  AddOutputFilterByType DEFLATE application/javascript application/x-javascript
+  AddOutputFilterByType DEFLATE application/json application/xml application/rss+xml
+  AddOutputFilterByType DEFLATE image/svg+xml
+</IfModule>
+
+# ---- Browser caching ----
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType image/jpg               "access plus 1 year"
+  ExpiresByType image/jpeg              "access plus 1 year"
+  ExpiresByType image/png               "access plus 1 year"
+  ExpiresByType image/webp              "access plus 1 year"
+  ExpiresByType image/svg+xml           "access plus 1 year"
+  ExpiresByType image/x-icon            "access plus 1 year"
+  ExpiresByType font/woff2              "access plus 1 year"
+  ExpiresByType text/css                "access plus 1 month"
+  ExpiresByType application/javascript  "access plus 1 month"
+  ExpiresByType text/html               "access plus 0 seconds"
+</IfModule>
+<IfModule mod_headers.c>
+  <FilesMatch "\.(css|js)$">
+    Header set Cache-Control "public, max-age=2592000"
+  </FilesMatch>
+  <FilesMatch "\.(jpg|jpeg|png|webp|svg|gif|ico|woff2)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+</IfModule>
+
+# ---- Directory listing off ----
+Options -Indexes -MultiViews
+
+# ---- Default charset ----
+AddDefaultCharset UTF-8

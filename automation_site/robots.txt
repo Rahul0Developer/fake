@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /admin.php
+Disallow: /contact.php?
+Disallow: /newsletter.php
+Disallow: /data/
+Disallow: /assets/uploads/
+Disallow: /config.php
+
+Sitemap: https://nikojitechnologies.com/sitemap.xml

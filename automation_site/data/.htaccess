@@ -1,0 +1,15 @@
+# Deny all direct web access to everything in this folder.
+# contacts.json / contacts.csv / newsletter.json / newsletter.csv /
+# admin-config.php must only ever be read by PHP's own file functions
+# (file_get_contents, include, etc.), never served as a raw HTTP response.
+
+# Apache 2.4+
+<IfModule mod_authz_core.c>
+  Require all denied
+</IfModule>
+
+# Apache 2.2 (some older cPanel builds)
+<IfModule !mod_authz_core.c>
+  Order allow,deny
+  Deny from all
+</IfModule>
