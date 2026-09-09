@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  # FastAPI Prediction Service
+  api:
+    build: .
+    container_name: churn-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./models:/app/models
+      - ./mlruns:/app/mlruns
+    environment:
+      - MLFLOW_TRACKING_URI=./mlruns
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - churn-network
+
+  # Streamlit Dashboard
+  dashboard:
+    build: .
+    container_name: churn-dashboard
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - API_URL=http://api:8000
+    command: streamlit run dashboard/app.py --server.address=0.0.0.0 --server.port 8501
+    depends_on:
+      - api
+    networks:
+      - churn-network
+
+  # PostgreSQL Database (optional - for production use)
+  postgres:
+    image: postgres:15-alpine
+    container_name: churn-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: churn_user
+      POSTGRES_PASSWORD: secure_password
+      POSTGRES_DB: churn_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - churn-network
+
+networks:
+  churn-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
