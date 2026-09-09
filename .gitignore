@@ -1,1 +1,9 @@
-Nothing should be ignored based on the provided file changes. The only modified file is a Python source file (`churn_platform/api/predict.py`), which should not be added to .gitignore.
+```
+# Compressed archives
+*.tar.gz
+
+# Environment files
+.env
+.env.local
+*.env.*
+```
