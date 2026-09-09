@@ -1,50 +1,51 @@
 ```
-# MLflow tracking
-mlruns/
-mlflow.db
+# Compressed files
+*.zip
 
-# Models
-models/*.pkl
+# Environment files
+.env
+.env.local
+*.env.*
 
-# Data files (processed)
-data/processed/
-
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-env/
-venv/
-.venv/
-.ENV/
-.ENV.local
-.python-version
-*.env*
-.env*
-
-# Logs
+# Logs and temporary files
 *.log
+*.tmp
 
-# OS
-.DS_Store
-Thumbs.db
-
-# IDE
+# Editor/IDE files
 .vscode/
 .idea/
 *.swp
 *.swo
-*.tmp
 
-# Coverage
-.coverage
-coverage/
-htmlcov/
-
-# Distribution
+# Dependency directories
+node_modules/
+__pycache__/
+.venv/
+venv/
+.mypy_cache/
+.pytest_cache/
 dist/
 build/
-*.egg-info/
+target/
+.gradle/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Coverage
+coverage/
+htmlcov/
+.coverage
+
+# Compiled files
+*.pyc
+*.class
+*.o
+*.exe
+*.dll
+*.so
+*.a
+*.obj
+*.out
 ```
