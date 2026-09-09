@@ -472,18 +472,39 @@ async def get_feature_importance():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+def deep_clean_numpy(obj):
+    """Recursively convert numpy types to native Python types."""
+    if isinstance(obj, dict):
+        return {k: deep_clean_numpy(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [deep_clean_numpy(item) for item in obj]
+    elif isinstance(obj, (np.integer, np.int64, np.int32)):
+        return int(obj)
+    elif isinstance(obj, (np.floating, np.float64, np.float32)):
+        return float(obj)
+    elif isinstance(obj, np.ndarray):
+        return obj.tolist()
+    elif hasattr(obj, 'item'):
+        return obj.item()
+    else:
+        return obj
+
+
 @app.get("/model-info", tags=["Model Info"])
 async def get_model_info():
     """Get detailed model information."""
     if not is_model_loaded:
         raise HTTPException(status_code=503, detail="Model not loaded")
     
+    results = model_data.get('results', {})
+    clean_results = deep_clean_numpy(results)
+    
     return {
         "model_name": model_data.get('model_name', 'Unknown'),
         "feature_count": len(feature_names),
-        "features": feature_names[:50],  # First 50 features
-        "results": model_data.get('results', {}),
-        "model_type": str(type(model_data['model']))
+        "features": list(feature_names[:50]) if feature_names else [],  # First 50 features
+        "results": clean_results,
+        "model_type": type(model_data['model']).__name__
     }
 
 
